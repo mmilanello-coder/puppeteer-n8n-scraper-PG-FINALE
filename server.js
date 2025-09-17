@@ -19,17 +19,18 @@ function slugify(s) {
     .replace(/\s+/g, '_');
 }
 
-async function launch() {
-  const args = ['--no-sandbox','--disable-setuid-sandbox','--disable-gpu'];
-  if (LIGHT) args.push('--disable-dev-shm-usage','--single-process','--no-zygote');
+async function launchBrowser() {
+  const args = ['--no-sandbox', '--disable-setuid-sandbox'];
+  if (PROXY) args.push(`--proxy-server=${PROXY}`);
+  if (LIGHT) args.push('--disable-dev-shm-usage', '--no-zygote', '--single-process');
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || null;
   return puppeteer.launch({
     headless: HEADLESS,
-    executablePath: CHROME,
+    executablePath,   
     args,
-    defaultViewport: { width: 1366, height: 900 },
+    defaultViewport: { width: 1366, height: 900 }
   });
 }
-
 async function newPage(browser) {
   const page = await browser.newPage();
   if (LIGHT) {
