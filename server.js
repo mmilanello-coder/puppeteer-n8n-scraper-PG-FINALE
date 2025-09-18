@@ -12,6 +12,9 @@ const LIGHT = (process.env.LIGHT_MODE ?? 'true') === 'true';
 const PROXY = process.env.PROXY_URL || null;
 const EXEC_PATH = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
+// -------- UTILS --------
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
 function slugify(s){
   return String(s).toLowerCase().trim()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -52,7 +55,7 @@ async function newPage(browser){
 
 async function clickConsent(page){
   try{
-    await page.waitForTimeout(400);
+    await sleep(400);
     const [btn] = await page.$x("//button[contains(.,'Accetta') or contains(.,'Accept') or contains(.,'Consenti')]");
     if (btn) await btn.click();
   }catch{}
@@ -149,7 +152,7 @@ app.post('/synonyms',async (req,res)=>{
     const page=await newPage(browser);
     const nav=await gotoResults(page,{q:category,city,region});
     if(!nav.ok) throw new Error('cannot reach results page');
-    await page.waitForTimeout(700);
+    await sleep(700);
     let syn=await extractSynonyms(page);
     syn=Array.from(new Set(syn.map(s=>s.replace(/\s+/g,' ').trim()))).slice(0,limit);
     res.json({category,city,region,count:syn.length,synonyms:syn});
@@ -171,7 +174,7 @@ app.post('/scrape',async (req,res)=>{
     if(useSynonyms){
       const nav0=await gotoResults(page,{q:category,city,region});
       if(nav0.ok){
-        await page.waitForTimeout(600);
+        await sleep(600);
         let syn=await extractSynonyms(page);
         syn=Array.from(new Set(syn.map(s=>s.replace(/\s+/g,' ').trim()))).slice(0,limitSyn);
         terms.push(...syn);
@@ -182,7 +185,7 @@ app.post('/scrape',async (req,res)=>{
     for(const term of terms){
       const nav=await gotoResults(page,{q:`${term} ${city}`,city,region});
       if(!nav.ok) continue;
-      await page.waitForTimeout(600);
+      await sleep(600);
       const got=await extractCompanies(page,limitCompanies,maxPages);
       got.forEach(g=>companies.push({term,...g}));
       if(companies.length>=limitCompanies) break;
