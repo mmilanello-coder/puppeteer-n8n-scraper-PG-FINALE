@@ -216,5 +216,16 @@ app.post('/scrape-csv',async (req,res)=>{
     res.send(csv);
   });
 });
+const { exec } = require('child_process');
 
+app.get('/chrome-version', (_req, res) => {
+  exec('chromium --version', (err, stdout, stderr) => {
+    if (err) return res.status(500).json({ error: stderr || err.message });
+    res.json({
+      chromium: stdout.trim(),
+      execPath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      node: process.version
+    });
+  });
+});
 app.listen(PORT,()=>console.log(`API listening on :${PORT} (exec=${EXEC_PATH}, headless=${HEADLESS})`));
